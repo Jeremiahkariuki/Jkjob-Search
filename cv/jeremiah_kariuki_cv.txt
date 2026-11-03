@@ -1,0 +1,92 @@
+JEREMIAH KARIUKI BETH
+Full Stack & Backend Developer | Python | Django | Odoo Developer | QA Tester | Cloud Services
+Nairobi, Kenya | +254 743 341 474 | jeremmykariz001@gmail.com | github.com/Jeremiahkariuki | linkedin.com/in/jeremiah-kariuki-a30b4b222
+
+PROFESSIONAL SUMMARY
+Full Stack and Backend Developer with 3+ years of experience using Python and Django to design and build server-side systems — RESTful APIs, multitenant SaaS platforms, data models, authentication, billing and automated workflows. Experience spans ERP development (Odoo), property-management and ISP platforms, productivity tools, and quality assurance across freelance, part-time and full-time roles in Kenya and Somalia. Comfortable owning a project end-to-end: from requirements and data modeling through testing, deployment, and support.
+
+WORK EXPERIENCE
+
+Full Stack Engineer & Support · Uniquemerchants.co.ke
+Sep 2026 – Present · 2 mos | Kenol, Murang'a County, Kenya · Hybrid · Part-time
+• Building and supporting Sabrinet.com, a multitenant platform for internet service providers (ISPs) and their tenants, using Python and Django.
+• Developed features for ISP and tenant management, financial accountability and reporting, and customer login.
+• Built and maintained REST APIs with Django REST Framework; provide ongoing technical support for live systems.
+
+Co-founder & Senior Back End Developer · Pystay.com
+Jul 2025 – Present · 1 yr 4 mos | Kenol, Murang'a County, Kenya · Remote · Part-time
+• Co-founded and developed a multitenant SaaS property management platform for landlords, agents and tenants.
+• Developed and maintained scalable backend systems in Python, contributing to core product infrastructure.
+• Designed RESTful APIs and maintained server-side logic to support web application features.
+• Integrated payment systems and automated billing and subscription workflows, with accountability of finances for landlords and tenants.
+• Collaborated with cross-functional teams to deliver high-quality, well-tested code on schedule.
+
+Backend Developer & QA Tester · Omaya Technologies
+Aug 2025 – Aug 2026 · 1 yr 1 mo | Somalia · Remote · Full-time (Promoted from QA to Backend Developer)
+• Conducted comprehensive system testing of company platforms to ensure quality and reliability, including API testing with Postman.
+• Collaborated with cross-functional teams to align technical development with business goals and enhance user experience.
+• Identified, documented, and tracked bugs, working with developers to drive resolution.
+• Oversaw backend architecture, database optimization, and integrations with payment providers.
+• Implemented usage-based commission structures, user management systems, and dynamic fee calculations.
+
+Lead Developer, Full Stack Engineer · jdiary (Freelance)
+Mar 2026 – Jun 2026 · 4 mos | Ruiru, Kiambu, Kenya · Remote
+• Developed a personal productivity and reflection platform using Python and Django, featuring diary entries, task management, and event scheduling.
+• Integrated Django REST Framework (DRF) to build scalable API endpoints for dynamic data retrieval and state management.
+• Engineered a mood-tracking system with a custom algorithm to calculate user streaks and drive engagement.
+• Implemented automated PDF export using xhtml2pdf for offline data access.
+• Configured production hardening: WhiteNoise static file management, SSL redirection, HSTS, and secure cookies.
+• Deployed on Render Cloud with PostgreSQL and Gunicorn, and set up a CI/CD pipeline via GitHub.
+• Designed a responsive glassmorphism UI with mood-aware components.
+
+Odoo Developer / Python & Django Developer · JK Security Service (Freelance)
+Jan 2025 – Jun 2026 · 1 yr 6 mos | Kenya · Remote
+• Built a complete Security Services Management System from scratch using Odoo 17 (Python, XML, PostgreSQL) as a full-stack ERP solution for security companies in Kenya.
+• Developed 12 custom Odoo modules, including Guards Management, Shift Scheduling, HR Recruitment, Payroll, Incident Reports, and Complaint Management.
+• Built custom Python models with computed fields, constraints, and workflow state machines.
+• Designed XML views across List, Form, Kanban, Calendar, Graph, and Pivot view types.
+• Implemented role-based access control with 6 user groups and record-level security rules.
+• Integrated payroll, PAYE, and tax deduction calculations into the Payroll module.
+• Generated PDF reports using the QWeb templating engine; wrote unit tests using the Odoo TransactionCase framework to validate core business logic.
+Skills: Odoo 17, PostgreSQL, Python, XML views, QWeb, RBAC, workflow automation, unit testing
+
+Software Developer · Njane Software Labs
+Jul 2025 – Aug 2025 · 2 mos | Nairobi County, Kenya · Remote
+• Designed and developed business management software using the Django framework.
+• Collaborated with cross-functional teams to gather requirements and deliver solutions on time.
+
+Back End Developer · VR Lab by Soft & Skills
+Jan 2025 – Jul 2025 · 7 mos | Remote
+• Built and maintained server-side features using Django, HTML, and back-end technologies.
+• Integrated third-party APIs and optimised database queries for performance.
+
+AI Training · Remotask
+Jan 2024 – Dec 2024 · 1 yr | Remote · Part-time
+• Trained and evaluated AI/ML models through data annotation and quality review.
+• Contributed to improving model accuracy across a range of NLP and computer vision projects.
+
+PROJECTS
+• Sabrinet.com — Multitenant ISP Platform: Technologies: Python, Django, Django REST Framework.
+• Property Management & Rental Platform (Pystay): Python, Django, M-Pesa payment workflows, tenant ledgers, utility billing.
+• Security Solutions & Services Website: Technologies: React.js, TypeScript, Node.js, PostgreSQL, Docker, Git, DigitalOcean.
+• Transport & Logistics Management Website: Technologies: React.js, TypeScript, Node.js, PostgreSQL, Docker, Git, DigitalOcean.
+• Bwada Football Club: Netlify deployment, modern responsive frontend.
+
+OPEN SOURCE & FREELANCE PROJECTS
+• Security-services: Security Services Management System built on Odoo — companion open-source repo to the Security Service ERP work above.
+• HAPPY-CHURCH-RUIRU: Full-featured church management web app (PHP) handling member records, events, and announcements. 2 stars.
+• jk-First: Python project. 1 star, 1 fork.
+• gym-website: Responsive gym website (Python) covering services, class schedules, and trainer profiles. 1 star.
+• my-portfolio: Personal developer portfolio site (Python).
+• personal-diary-planner: Customisable digital journal and planner to organise tasks, log moods, and archive memories (Python).
+
+TECHNICAL SKILLS
+• Odoo ERP: Odoo 17, custom module development, ORM model design, computed fields & constraints, workflow state machines, XML views (List/Form/Kanban/Calendar/Graph/Pivot), QWeb PDF reporting, RBAC & record rules, payroll/PAYE/tax logic, TransactionCase unit testing.
+• Backend Development: Python, Django, Django REST Framework, FastAPI, multitenant architecture, JWT/OAuth, session-based auth, payment integrations (M-Pesa), background tasks, cron automation.
+• Frontend: React.js, TypeScript, Node.js, HTML/CSS, responsive UI design.
+• Databases: PostgreSQL, SQLite — schema design and query optimisation.
+• Cloud & DevOps: Render Cloud, DigitalOcean, Gunicorn, WhiteNoise, Docker, Git & GitHub, GitHub Actions CI/CD, Linux/CLI.
+• QA & Testing: Test case design and execution, unit testing, manual & automated regression testing, bug tracking and resolution workflows, Postman API testing, cross-functional QA/dev collaboration.
+
+AVAILABILITY
+Available for immediate joining, with proven experience delivering results while working remotely from Nairobi, Kenya. Fully flexible on working arrangement — equally ready to work on-site or continue remotely — and open to relocation to take on this opportunity.

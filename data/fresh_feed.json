@@ -1,0 +1,72 @@
+[
+  {
+    "id": "givedirectly_sr_swe_remote_ke",
+    "title": "Senior Software Engineer (Remote - Kenya / EMEA)",
+    "company": "GiveDirectly",
+    "url": "https://boards.greenhouse.io/givedirectly/jobs/6192842",
+    "source": "Greenhouse Direct",
+    "published_at": "2026-11-02T10:15:00+03:00",
+    "location": "Remote - Kenya / EMEA Hub",
+    "employment_type": "Full-time",
+    "seniority": "Senior",
+    "salary": "$112,350 - $125,000 USD equivalent (Local Kenya Payroll/Contractor + Benefits)",
+    "skills": ["Python", "PHP", "Laravel", "React", "TypeScript", "PostgreSQL", "REST API", "Docker", "CI/CD"],
+    "description": "GiveDirectly is seeking a Senior Software Engineer to design, scale, and maintain critical payment delivery systems and internal tools. Fully remote with Kenya listed as an approved employment hub. Requires 4+ years of production experience across modern full-stack web architectures, APIs, and relational databases."
+  },
+  {
+    "id": "canonical_commercial_sys_emea",
+    "title": "Software Engineer - Commercial Systems & Web Platforms",
+    "company": "Canonical",
+    "url": "https://boards.greenhouse.io/canonical/jobs/5920311",
+    "source": "Greenhouse Direct",
+    "published_at": "2026-11-02T16:30:00+03:00",
+    "location": "Home based - EMEA (Including Africa / Kenya)",
+    "employment_type": "Full-time",
+    "seniority": "Mid-level",
+    "salary": "$65,000 - $95,000 USD (Competitive EMEA geographic tier)",
+    "skills": ["Python", "Django", "React", "TypeScript", "PostgreSQL", "Linux", "Docker", "Git"],
+    "description": "Canonical is looking for a Software Engineer to develop customer-facing web services, commerce platforms, and subscription infrastructure. Distributed global remote team working in EMEA time zones. Requires strong backend skills in Python or Go, solid frontend experience with React/TypeScript, and Linux familiarity."
+  },
+  {
+    "id": "alpaca_swe_emea",
+    "title": "Software Engineer - Market Data Platforms (Remote EMEA)",
+    "company": "Alpaca",
+    "url": "https://job-boards.greenhouse.io/alpaca/jobs/4521098",
+    "source": "Greenhouse Direct",
+    "published_at": "2026-11-03T08:00:00+03:00",
+    "location": "Remote - EMEA (UTC to UTC+3)",
+    "employment_type": "Full-time",
+    "seniority": "Mid-to-Senior",
+    "salary": "$85,000 - $115,000 USD",
+    "skills": ["Go", "Python", "TypeScript", "Node.js", "PostgreSQL", "Redis", "Distributed Systems", "Docker"],
+    "description": "Alpaca provides developer-first financial infrastructure. Seeking an engineer for our Market Data pipeline. Fully remote across EMEA with aligned working hours. Requires production experience with real-time data, REST/WebSocket APIs, and scalable backend services."
+  },
+  {
+    "id": "camunda_sr_swe_backend_emea",
+    "title": "Senior Backend Software Engineer - Data Layer",
+    "company": "Camunda",
+    "url": "https://app.ashbyhq.com/camunda/jobs/829104",
+    "source": "AshbyHQ",
+    "published_at": "2026-11-02T14:00:00+03:00",
+    "location": "Remote - EMEA (Global remote pool covering Europe/Africa)",
+    "employment_type": "Full-time",
+    "seniority": "Senior",
+    "salary": "€80,000 - €105,000 EUR",
+    "skills": ["Java", "Go", "Distributed Systems", "PostgreSQL", "Kafka", "Kubernetes", "Docker"],
+    "description": "Build high-throughput orchestration infrastructure for workflow automation. Remote-first engineering culture with team distribution across EMEA. Strong distributed systems, storage, and cloud-native background required."
+  },
+  {
+    "id": "koala_principal_swe_global",
+    "title": "Full-Stack Engineer - Health & Platform Applications",
+    "company": "Koala Health",
+    "url": "https://jobs.lever.co/koalahealth/7192831",
+    "source": "Lever Direct",
+    "published_at": "2026-11-03T09:45:00+03:00",
+    "location": "Global Remote (Worldwide / Kenya eligible)",
+    "employment_type": "Full-time",
+    "seniority": "Senior",
+    "salary": "$90,000 - $130,000 USD",
+    "skills": ["TypeScript", "Next.js", "React", "Node.js", "PostgreSQL", "GraphQL", "TailwindCSS"],
+    "description": "Koala Health is hiring a full-stack engineer to lead core application interfaces and patient platform workflows. Looking for modern web mastery in Next.js, React, TypeScript, and Node.js. 100% remote worldwide."
+  }
+]
