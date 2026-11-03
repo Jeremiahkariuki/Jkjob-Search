@@ -1,19 +1,5 @@
 [
   {
-    "id": "givedirectly_sr_swe_remote_ke",
-    "title": "Senior Software Engineer (Remote - Kenya / EMEA)",
-    "company": "GiveDirectly",
-    "url": "https://boards.greenhouse.io/givedirectly/jobs/6192842",
-    "source": "Greenhouse Direct",
-    "published_at": "2026-11-02T10:15:00+03:00",
-    "location": "Remote - Kenya / EMEA Hub",
-    "employment_type": "Full-time",
-    "seniority": "Senior",
-    "salary": "$112,350 - $125,000 USD equivalent (Local Kenya Payroll/Contractor + Benefits)",
-    "skills": ["Python", "PHP", "Laravel", "React", "TypeScript", "PostgreSQL", "REST API", "Docker", "CI/CD"],
-    "description": "GiveDirectly is seeking a Senior Software Engineer to design, scale, and maintain critical payment delivery systems and internal tools. Fully remote with Kenya listed as an approved employment hub. Requires 4+ years of production experience across modern full-stack web architectures, APIs, and relational databases."
-  },
-  {
     "id": "canonical_commercial_sys_emea",
     "title": "Software Engineer - Commercial Systems & Web Platforms",
     "company": "Canonical",
@@ -28,6 +14,62 @@
     "description": "Canonical is looking for a Software Engineer to develop customer-facing web services, commerce platforms, and subscription infrastructure. Distributed global remote team working in EMEA time zones. Requires strong backend skills in Python or Go, solid frontend experience with React/TypeScript, and Linux familiarity."
   },
   {
+    "id": "givedirectly_sr_swe_remote_ke",
+    "title": "Senior Software Engineer (Remote - Kenya / EMEA)",
+    "company": "GiveDirectly",
+    "url": "https://boards.greenhouse.io/givedirectly/jobs/6192842",
+    "source": "Greenhouse Direct",
+    "published_at": "2026-11-02T10:15:00+03:00",
+    "location": "Remote - Kenya / EMEA Hub",
+    "employment_type": "Full-time",
+    "seniority": "Senior",
+    "salary": "$112,350 - $125,000 USD equivalent (Local Kenya Payroll/Contractor + Benefits)",
+    "skills": ["Python", "PHP", "Laravel", "React", "TypeScript", "PostgreSQL", "REST API", "Docker", "CI/CD"],
+    "description": "GiveDirectly is seeking a Senior Software Engineer to design, scale, and maintain critical payment delivery systems and internal tools. Fully remote with Kenya listed as an approved employment hub. Requires 4+ years of production experience across modern full-stack web architectures, APIs, and relational databases."
+  },
+  {
+    "id": "safaricom_swe_mpesa_hybrid",
+    "title": "Full-Stack Software Engineer (M-Pesa & Digital Financial Services)",
+    "company": "Safaricom PLC",
+    "url": "https://safaricom.taleo.net/careersection/jobdetail.ftl?job=26000142",
+    "source": "Safaricom Careers Direct",
+    "published_at": "2026-11-03T07:30:00+03:00",
+    "location": "Nairobi, Kenya (Hybrid - 2 days HQ / 3 days remote)",
+    "employment_type": "Full-time",
+    "seniority": "Mid-level to Senior",
+    "salary": "KES 350,000 - 550,000 / month (Pension, Medical, Performance Bonus)",
+    "skills": ["Python", "Django", "FastAPI", "React", "TypeScript", "PostgreSQL", "Docker", "CI/CD", "REST API", "M-Pesa"],
+    "description": "Join Safaricom's Financial Services Engineering Tribe to build scalable merchant APIs, payment reconciliation pipelines, and customer portals. Hybrid work structure in Nairobi. Requires strong Python/Django, modern frontend experience (React/TypeScript), and solid database modeling with PostgreSQL."
+  },
+  {
+    "id": "cellulant_sr_backend_nairobi_hybrid",
+    "title": "Senior Python Backend Engineer (Payment Gateway & Settlement)",
+    "company": "Cellulant (Tingg)",
+    "url": "https://jobs.lever.co/cellulant/8301928",
+    "source": "Lever Direct",
+    "published_at": "2026-11-03T08:15:00+03:00",
+    "location": "Nairobi, Kenya (Hybrid - Westlands Tech Hub)",
+    "employment_type": "Full-time",
+    "seniority": "Senior",
+    "salary": "KES 380,000 - 580,000 / month",
+    "skills": ["Python", "Django", "FastAPI", "PostgreSQL", "Redis", "Docker", "Postman", "CI/CD", "REST APIs"],
+    "description": "Cellulant is powering payments across 35 African countries. We are looking for a Senior Python Engineer to architect high-availability payment routing and automated settlement ledgers. Hybrid office model in Nairobi. Strong background in Django/FastAPI and automated API testing required."
+  },
+  {
+    "id": "nairobi_tech_onsite_platform_eng",
+    "title": "Full Stack Platform Engineer (ERP & Enterprise Solutions)",
+    "company": "Nairobi Tech Hub / Enterprise Systems",
+    "url": "https://apply.workable.com/nairobi-tech/j/E829104A",
+    "source": "Workable Direct",
+    "published_at": "2026-11-03T09:00:00+03:00",
+    "location": "Westlands, Nairobi, Kenya (Onsite / Office)",
+    "employment_type": "Full-time",
+    "seniority": "Mid-level",
+    "salary": "KES 280,000 - 420,000 / month",
+    "skills": ["Python", "Django", "Odoo", "PostgreSQL", "React", "Docker", "Git", "REST API"],
+    "description": "Enterprise software consultancy looking for a Full Stack Engineer to build custom business platforms, ERP customizations (Odoo/Python), and client dashboard interfaces. Onsite office in Westlands, Nairobi. Immediate joining preferred."
+  },
+  {
     "id": "alpaca_swe_emea",
     "title": "Software Engineer - Market Data Platforms (Remote EMEA)",
     "company": "Alpaca",
@@ -40,20 +82,6 @@
     "salary": "$85,000 - $115,000 USD",
     "skills": ["Go", "Python", "TypeScript", "Node.js", "PostgreSQL", "Redis", "Distributed Systems", "Docker"],
     "description": "Alpaca provides developer-first financial infrastructure. Seeking an engineer for our Market Data pipeline. Fully remote across EMEA with aligned working hours. Requires production experience with real-time data, REST/WebSocket APIs, and scalable backend services."
-  },
-  {
-    "id": "camunda_sr_swe_backend_emea",
-    "title": "Senior Backend Software Engineer - Data Layer",
-    "company": "Camunda",
-    "url": "https://app.ashbyhq.com/camunda/jobs/829104",
-    "source": "AshbyHQ",
-    "published_at": "2026-11-02T14:00:00+03:00",
-    "location": "Remote - EMEA (Global remote pool covering Europe/Africa)",
-    "employment_type": "Full-time",
-    "seniority": "Senior",
-    "salary": "€80,000 - €105,000 EUR",
-    "skills": ["Java", "Go", "Distributed Systems", "PostgreSQL", "Kafka", "Kubernetes", "Docker"],
-    "description": "Build high-throughput orchestration infrastructure for workflow automation. Remote-first engineering culture with team distribution across EMEA. Strong distributed systems, storage, and cloud-native background required."
   },
   {
     "id": "koala_principal_swe_global",

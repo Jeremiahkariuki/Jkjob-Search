@@ -1,12 +1,11 @@
 """
 Jkjob-search Interactive Local Web Dashboard Server.
-Zero extra dependencies - uses Python's built-in http.server.
-Endpoints:
-  GET  /              - Modern Web UI Dashboard
-  GET  /api/jobs      - Returns all tracked jobs from SQLite
-  GET  /api/profile   - Returns candidate profile
-  POST /api/status    - Updates job application status and notes
-  POST /api/refresh   - Triggers fresh search and matching pipeline
+Features:
+- Dark / Light Mode with instant toggle (🌙 / ☀️ icon) and persistent state
+- Filter by Work Arrangement: Remote, Hybrid, Onsite/Office, or All
+- Filter by Score: All Active, Top Matches (≥85), Applied / In Progress
+- Real-time application status update directly into SQLite & CSV
+- Pipeline trigger button with live progress
 """
 import json
 import urllib.parse
@@ -24,13 +23,48 @@ HTML_DASHBOARD = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jkjob-search | EMEA Tech Job Intelligence</title>
+  <title>Jkjob-search | Job Intelligence & Opportunity Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background-color: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    .glass-card { background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(48, 54, 61, 0.7); border-radius: 12px; }
+    :root {
+      --bg-color: #0d1117;
+      --card-bg: rgba(22, 27, 34, 0.9);
+      --card-border: rgba(48, 54, 61, 0.8);
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --box-bg: rgba(13, 17, 23, 0.7);
+      --box-border: #21262d;
+      --select-bg: #21262d;
+    }
+    body.light-theme {
+      --bg-color: #f6f8fa;
+      --card-bg: #ffffff;
+      --card-border: #d0d7de;
+      --text-main: #1f2328;
+      --text-muted: #656d76;
+      --box-bg: #f6f8fa;
+      --box-border: #d0d7de;
+      --select-bg: #f6f8fa;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      transition: all 0.25s ease;
+    }
+    .inner-box {
+      background: var(--box-bg);
+      border: 1px solid var(--box-border);
+    }
     .badge-confirmed { background: rgba(46, 160, 67, 0.15); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.4); }
     .badge-score { background: rgba(56, 139, 253, 0.15); color: #58a6ff; border: 1px solid rgba(56, 139, 253, 0.4); }
+    .badge-arrangement { background: rgba(210, 153, 34, 0.15); color: #d29922; border: 1px solid rgba(210, 153, 34, 0.4); }
     .badge-status { background: rgba(163, 113, 247, 0.15); color: #bc8cff; border: 1px solid rgba(163, 113, 247, 0.4); }
   </style>
 </head>
@@ -41,53 +75,74 @@ HTML_DASHBOARD = """<!DOCTYPE html>
     <header class="glass-card p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
         <div class="flex items-center gap-3">
-          <h1 class="text-2xl font-bold text-white tracking-tight">Jkjob-search</h1>
-          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-900/60 text-emerald-400 border border-emerald-700/50">LIVE SYSTEM</span>
+          <h1 class="text-2xl font-bold tracking-tight">Jkjob-search</h1>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-900/40 text-emerald-400 border border-emerald-600/40">LIVE INTELLIGENCE</span>
+          <span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-900/40 text-blue-400 border border-blue-600/30">REMOTE • HYBRID • ONSITE</span>
         </div>
-        <p class="text-sm text-gray-400 mt-1">Dedicated EMEA & Kenya Remote Tech Opportunity Engine for <span class="text-white font-medium" id="cand-name">Jeremiah Kariuki Beth</span></p>
+        <p class="text-sm text-gray-400 mt-1">Opportunity Intelligence & Real-Time Tracking for <span class="font-semibold text-blue-400" id="cand-name">Jeremiah Kariuki Beth</span></p>
       </div>
-      <div class="flex items-center gap-3">
+      
+      <div class="flex items-center gap-3 flex-wrap">
+        <!-- Theme Toggle Button -->
+        <button onclick="toggleTheme()" id="theme-btn" class="p-2.5 glass-card hover:border-gray-500 rounded-lg text-lg transition flex items-center justify-center" title="Toggle Dark/Light Mode">
+          <span id="theme-icon">🌙</span>
+        </button>
+
+        <!-- Action Buttons -->
         <button onclick="triggerRefresh()" id="refresh-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition shadow flex items-center gap-2">
           <span>🔄 Run Pipeline Now</span>
         </button>
-        <a href="/data/job_tracker.csv" download class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg border border-gray-700 transition">
+        <a href="/data/job_tracker.csv" download class="px-4 py-2 glass-card hover:border-gray-500 text-sm font-medium rounded-lg transition flex items-center gap-1.5">
           📥 Export CSV
         </a>
       </div>
     </header>
 
-    <!-- Profile & Metrics Bar -->
+    <!-- Candidate Profile & System Metrics -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="glass-card p-4">
-        <div class="text-xs uppercase text-gray-400 font-semibold">Location / Base</div>
-        <div class="text-base font-bold text-white mt-1">🇰🇪 Nairobi, Kenya</div>
-        <div class="text-xs text-gray-400">Africa/Nairobi (EAT • UTC+3)</div>
+        <div class="text-xs uppercase text-gray-400 font-semibold">Location & Mobility</div>
+        <div class="text-base font-bold mt-1">🇰🇪 Nairobi, Kenya</div>
+        <div class="text-xs text-gray-400">Open to Remote, Hybrid & Onsite</div>
       </div>
       <div class="glass-card p-4">
-        <div class="text-xs uppercase text-gray-400 font-semibold">Verified Stack</div>
-        <div class="text-base font-bold text-white mt-1">Python • Django • React • Odoo</div>
-        <div class="text-xs text-gray-400">TypeScript • PostgreSQL • Docker</div>
+        <div class="text-xs uppercase text-gray-400 font-semibold">Primary Tech Stack</div>
+        <div class="text-base font-bold mt-1">Python • Django • React • Odoo</div>
+        <div class="text-xs text-gray-400">TypeScript • PostgreSQL • Docker • M-Pesa</div>
       </div>
       <div class="glass-card p-4">
-        <div class="text-xs uppercase text-gray-400 font-semibold">Freshness Window</div>
+        <div class="text-xs uppercase text-gray-400 font-semibold">Posting Window</div>
         <div class="text-base font-bold text-emerald-400 mt-1">≤ 48.0 Hours</div>
-        <div class="text-xs text-gray-400">Strict posting timestamp filter</div>
+        <div class="text-xs text-gray-400">Strict publication date verification</div>
       </div>
       <div class="glass-card p-4">
         <div class="text-xs uppercase text-gray-400 font-semibold">Tracked Vacancies</div>
-        <div class="text-base font-bold text-white mt-1" id="total-count">Loading...</div>
-        <div class="text-xs text-gray-400" id="applied-count">0 applied</div>
+        <div class="text-base font-bold mt-1" id="total-count">Loading...</div>
+        <div class="text-xs text-gray-400" id="applied-count">0 in progress</div>
       </div>
     </div>
 
-    <!-- Filter Tabs -->
-    <div class="flex gap-2 border-b border-gray-800 pb-2">
-      <button onclick="setFilter('all')" id="tab-all" class="px-3 py-1.5 rounded-md text-sm font-medium bg-gray-800 text-white">All Active</button>
-      <button onclick="setFilter('top')" id="tab-top" class="px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white">Top Matches (≥85)</button>
-      <button onclick="setFilter('applied')" id="tab-applied" class="px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white">Applied / Interviewing</button>
+    <!-- Filter Control Bar -->
+    <div class="glass-card p-4 space-y-3">
+      <!-- Status Filters -->
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs font-semibold uppercase text-gray-400 mr-2">Status / Fit:</span>
+        <button onclick="setFilter('all')" id="tab-all" class="px-3 py-1.5 rounded-md text-xs font-medium bg-blue-600 text-white">All Openings</button>
+        <button onclick="setFilter('top')" id="tab-top" class="px-3 py-1.5 rounded-md text-xs font-medium text-gray-400 hover:text-white glass-card">🔥 Top Matches (≥85)</button>
+        <button onclick="setFilter('applied')" id="tab-applied" class="px-3 py-1.5 rounded-md text-xs font-medium text-gray-400 hover:text-white glass-card">📝 Applied / Shortlisted</button>
+      </div>
+
+      <!-- Arrangement Filters (Remote, Hybrid, Onsite) -->
+      <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-800">
+        <span class="text-xs font-semibold uppercase text-gray-400 mr-2">Arrangement:</span>
+        <button onclick="setArrangement('all')" id="arr-all" class="px-3 py-1 rounded text-xs font-medium bg-gray-700 text-white">All Formats</button>
+        <button onclick="setArrangement('Remote')" id="arr-remote" class="px-3 py-1 rounded text-xs font-medium text-gray-400 hover:text-white glass-card">🌐 Remote Only</button>
+        <button onclick="setArrangement('Hybrid')" id="arr-hybrid" class="px-3 py-1 rounded text-xs font-medium text-gray-400 hover:text-white glass-card">🏢 Hybrid (Nairobi)</button>
+        <button onclick="setArrangement('Onsite')" id="arr-onsite" class="px-3 py-1 rounded text-xs font-medium text-gray-400 hover:text-white glass-card">📍 Onsite / Office</button>
+      </div>
     </div>
 
-    <!-- Jobs Grid -->
+    <!-- Vacancies List -->
     <div id="jobs-container" class="space-y-4">
       <div class="p-8 text-center text-gray-500">Loading vacancies from SQLite database...</div>
     </div>
@@ -96,7 +151,32 @@ HTML_DASHBOARD = """<!DOCTYPE html>
 
   <script>
     let currentFilter = 'all';
+    let currentArrangement = 'all';
     let allJobs = [];
+
+    // Theme Management
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      applyTheme(savedTheme);
+    }
+
+    function toggleTheme() {
+      const isLight = document.body.classList.contains('light-theme');
+      applyTheme(isLight ? 'dark' : 'light');
+    }
+
+    function applyTheme(theme) {
+      const icon = document.getElementById('theme-icon');
+      if (theme === 'light') {
+        document.body.classList.add('light-theme');
+        icon.innerText = '☀️';
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.body.classList.remove('light-theme');
+        icon.innerText = '🌙';
+        localStorage.setItem('theme', 'dark');
+      }
+    }
 
     async function loadData() {
       try {
@@ -104,7 +184,7 @@ HTML_DASHBOARD = """<!DOCTYPE html>
         allJobs = await res.json();
         renderJobs();
       } catch (err) {
-        document.getElementById('jobs-container').innerHTML = '<div class="text-red-400 p-4 text-center">Failed to load jobs from database.</div>';
+        document.getElementById('jobs-container').innerHTML = '<div class="text-red-400 p-4 text-center">Failed to load vacancies from database.</div>';
       }
     }
 
@@ -113,9 +193,23 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       ['all', 'top', 'applied'].forEach(t => {
         const el = document.getElementById('tab-' + t);
         if (t === f) {
-          el.className = 'px-3 py-1.5 rounded-md text-sm font-medium bg-gray-800 text-white';
+          el.className = 'px-3 py-1.5 rounded-md text-xs font-medium bg-blue-600 text-white';
         } else {
-          el.className = 'px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white';
+          el.className = 'px-3 py-1.5 rounded-md text-xs font-medium text-gray-400 hover:text-white glass-card';
+        }
+      });
+      renderJobs();
+    }
+
+    function setArrangement(a) {
+      currentArrangement = a;
+      ['all', 'remote', 'hybrid', 'onsite'].forEach(t => {
+        const key = t === 'all' ? 'all' : (t.charAt(0).toUpperCase() + t.slice(1));
+        const el = document.getElementById('arr-' + t);
+        if (key.toLowerCase() === a.toLowerCase()) {
+          el.className = 'px-3 py-1 rounded text-xs font-medium bg-gray-700 text-white';
+        } else {
+          el.className = 'px-3 py-1 rounded text-xs font-medium text-gray-400 hover:text-white glass-card';
         }
       });
       renderJobs();
@@ -124,8 +218,15 @@ HTML_DASHBOARD = """<!DOCTYPE html>
     function renderJobs() {
       const container = document.getElementById('jobs-container');
       const filtered = allJobs.filter(j => {
-        if (currentFilter === 'top') return j.match_score >= 85;
-        if (currentFilter === 'applied') return ['Applied', 'Interviewing', 'Shortlisted'].includes(j.application_status);
+        // Status filter
+        if (currentFilter === 'top' && j.match_score < 85) return false;
+        if (currentFilter === 'applied' && !['Applied', 'Interviewing', 'Shortlisted'].includes(j.application_status)) return false;
+        
+        // Arrangement filter
+        if (currentArrangement !== 'all') {
+          const arr = (j.work_arrangement || '').toLowerCase();
+          if (!arr.includes(currentArrangement.toLowerCase())) return false;
+        }
         return true;
       });
 
@@ -134,32 +235,38 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       document.getElementById('applied-count').innerText = appliedCount + ' applied / in progress';
 
       if (!filtered.length) {
-        container.innerHTML = '<div class="glass-card p-8 text-center text-gray-400">No jobs match this filter criteria.</div>';
+        container.innerHTML = '<div class="glass-card p-8 text-center text-gray-400">No positions found matching this combination of filters.</div>';
         return;
       }
 
-      container.innerHTML = filtered.map(j => `
-        <div class="glass-card p-6 space-y-4 hover:border-gray-600 transition">
+      container.innerHTML = filtered.map(j => {
+        const arrangementBadge = j.work_arrangement.toLowerCase().includes('remote') 
+          ? '🌐 Remote' 
+          : (j.work_arrangement.toLowerCase().includes('hybrid') ? '🏢 Hybrid' : '📍 Onsite');
+
+        return `
+        <div class="glass-card p-6 space-y-4 hover:border-blue-500/50 transition">
           <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
             <div>
-              <div class="flex items-center gap-3 flex-wrap">
-                <a href="${j.official_application_link}" target="_blank" class="text-lg font-bold text-white hover:text-blue-400 transition flex items-center gap-1.5">
+              <div class="flex items-center gap-2.5 flex-wrap">
+                <a href="${j.official_application_link}" target="_blank" class="text-lg font-bold hover:text-blue-400 transition flex items-center gap-1.5">
                   ${j.job_title} ↗
                 </a>
                 <span class="px-2.5 py-0.5 rounded text-xs font-semibold badge-score">Match ${j.match_score}/100</span>
+                <span class="px-2.5 py-0.5 rounded text-xs font-semibold badge-arrangement">${arrangementBadge}</span>
                 <span class="px-2.5 py-0.5 rounded text-xs font-semibold badge-confirmed">✓ ${j.emea_kenya_eligibility_status.split('(')[0]}</span>
                 <span class="px-2 py-0.5 rounded text-xs badge-status">${j.application_status}</span>
               </div>
               <div class="text-sm text-gray-400 mt-1">
                 <strong class="text-gray-200">${j.company}</strong> • ${j.seniority} • ${j.employment_type} • 
-                <span class="text-gray-300">${j.eligible_hiring_locations}</span> • 
+                <span>${j.eligible_hiring_locations}</span> • 
                 <span class="text-yellow-400/90 font-medium">${j.salary_compensation}</span>
               </div>
             </div>
             
             <!-- Actions -->
             <div class="flex items-center gap-2 self-end md:self-auto">
-              <select onchange="updateStatus('${j.official_application_link}', this.value)" class="bg-gray-800 text-gray-300 text-xs px-2.5 py-1.5 rounded border border-gray-700 focus:outline-none focus:border-blue-500">
+              <select onchange="updateStatus('${j.official_application_link}', this.value)" class="inner-box text-xs px-2.5 py-1.5 rounded focus:outline-none focus:border-blue-500">
                 <option value="Not reviewed" ${j.application_status === 'Not reviewed' ? 'selected' : ''}>Not reviewed</option>
                 <option value="Shortlisted" ${j.application_status === 'Shortlisted' ? 'selected' : ''}>Shortlisted</option>
                 <option value="Applied" ${j.application_status === 'Applied' ? 'selected' : ''}>Applied</option>
@@ -167,25 +274,26 @@ HTML_DASHBOARD = """<!DOCTYPE html>
                 <option value="Rejected" ${j.application_status === 'Rejected' ? 'selected' : ''}>Rejected</option>
                 <option value="Closed" ${j.application_status === 'Closed' ? 'selected' : ''}>Closed</option>
               </select>
-              <a href="${j.official_application_link}" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded transition">
+              <a href="${j.official_application_link}" target="_blank" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded transition shadow-sm">
                 Apply Official
               </a>
             </div>
           </div>
 
-          <!-- Matching Rationale & Skills -->
-          <div class="text-xs bg-gray-900/60 p-3 rounded-lg border border-gray-800 space-y-1.5">
-            <div><span class="text-gray-400 font-semibold">Why it matches:</span> <span class="text-gray-300">${j.reasons_for_match}</span></div>
-            ${j.missing_requirements_risks ? `<div><span class="text-amber-400/90 font-semibold">Gaps / Risks:</span> <span class="text-gray-400">${j.missing_requirements_risks}</span></div>` : ''}
-            <div><span class="text-gray-400 font-semibold">Required Tech:</span> <span class="text-blue-300">${j.required_technical_skills}</span></div>
+          <!-- Matching Rationale & Skills Box -->
+          <div class="inner-box text-xs p-3.5 rounded-lg space-y-1.5">
+            <div><span class="font-semibold text-gray-400">Why it matches:</span> <span class="text-gray-300">${j.reasons_for_match}</span></div>
+            ${j.missing_requirements_risks ? `<div><span class="text-amber-400/90 font-semibold">Identified Gaps:</span> <span class="text-gray-400">${j.missing_requirements_risks}</span></div>` : ''}
+            <div><span class="font-semibold text-gray-400">Required Stack:</span> <span class="text-blue-300">${j.required_technical_skills}</span></div>
           </div>
 
           <div class="flex justify-between items-center text-xs text-gray-500 pt-1">
-            <span>Discovered: ~${j.listing_age_hours}h ago via ${j.original_source}</span>
-            <span>Recommended: <strong class="text-white">${j.recommended_next_action}</strong></span>
+            <span>Posted ~${j.listing_age_hours}h ago via ${j.original_source}</span>
+            <span>Recommended Next Step: <strong class="text-blue-400">${j.recommended_next_action}</strong></span>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     async function updateStatus(link, status) {
@@ -211,6 +319,7 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       }
     }
 
+    initTheme();
     loadData();
   </script>
 </body>

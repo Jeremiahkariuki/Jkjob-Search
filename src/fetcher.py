@@ -70,6 +70,17 @@ class JobFetcher:
         # Check eligibility
         status, evidence = EligibilityEngine.evaluate(location, description)
 
+        # Detect Work Arrangement: Remote, Hybrid, or Onsite
+        loc_and_title = f"{location} {title} {description[:200]}".lower()
+        if "hybrid" in loc_and_title:
+            arrangement = "Hybrid"
+        elif "remote" in loc_and_title or "anywhere" in loc_and_title or "home based" in loc_and_title:
+            arrangement = "Remote"
+        elif "onsite" in loc_and_title or "on-site" in loc_and_title or "office" in loc_and_title or "in-office" in loc_and_title:
+            arrangement = "Onsite"
+        else:
+            arrangement = "Remote / Flexible"
+
         return JobPosting(
             job_id=raw_id,
             title=title,
@@ -78,7 +89,7 @@ class JobFetcher:
             source=source,
             original_posting_date=published_at_str or "Date unverified",
             posting_timestamp=posting_ts or 0.0,
-            work_arrangement="Remote" if "remote" in location.lower() or "remote" in title.lower() else "Hybrid/Remote",
+            work_arrangement=arrangement,
             eligible_locations=location,
             emea_eligibility_status=status,
             eligibility_evidence=evidence,
