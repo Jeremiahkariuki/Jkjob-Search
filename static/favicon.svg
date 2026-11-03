@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="pingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Base Rounded Container -->
+  <rect width="64" height="64" rx="16" fill="url(#bgGrad)" stroke="#30363d" stroke-width="2"/>
+
+  <!-- Radar / Opportunity Rings -->
+  <circle cx="32" cy="32" r="22" fill="none" stroke="#38bdf8" stroke-width="1.2" stroke-opacity="0.25" stroke-dasharray="3 3"/>
+  <circle cx="32" cy="32" r="14" fill="none" stroke="#38bdf8" stroke-width="1.2" stroke-opacity="0.4"/>
+
+  <!-- Stylized Search Crosshair / Radar Beam -->
+  <path d="M 32 10 L 32 16 M 32 48 L 32 54 M 10 32 L 16 32 M 48 32 L 54 32" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.6"/>
+
+  <!-- Stylized "JK" Central Tech Emblem -->
+  <!-- 'J' -->
+  <path d="M 23 23 L 29 23 L 29 37 C 29 42 24 43 21 41" fill="none" stroke="url(#accentGrad)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 'K' -->
+  <path d="M 36 22 L 36 42 M 45 23 L 37 32 L 46 42" fill="none" stroke="#f0f6fc" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Live Verified Ping Dot (Top Right) -->
+  <circle cx="49" cy="15" r="4.5" fill="url(#pingGrad)" filter="url(#glow)"/>
+  <circle cx="49" cy="15" r="2" fill="#ecfdf5"/>
+</svg>

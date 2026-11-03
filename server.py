@@ -24,6 +24,8 @@ HTML_DASHBOARD = """<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jkjob-search | Job Intelligence & Opportunity Tracker</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.svg">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root {
@@ -75,9 +77,14 @@ HTML_DASHBOARD = """<!DOCTYPE html>
     <header class="glass-card p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
         <div class="flex items-center gap-3">
-          <h1 class="text-2xl font-bold tracking-tight">Jkjob-search</h1>
-          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-900/40 text-emerald-400 border border-emerald-600/40">LIVE INTELLIGENCE</span>
-          <span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-900/40 text-blue-400 border border-blue-600/30">REMOTE • HYBRID • ONSITE</span>
+          <img src="/favicon.svg" alt="Jkjob-search Logo" class="w-10 h-10 rounded-xl shadow-md border border-gray-700/60" />
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h1 class="text-2xl font-bold tracking-tight">Jkjob-search</h1>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-900/40 text-emerald-400 border border-emerald-600/40">LIVE INTELLIGENCE</span>
+              <span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-900/40 text-blue-400 border border-blue-600/30">REMOTE • HYBRID • ONSITE</span>
+            </div>
+          </div>
         </div>
         <p class="text-sm text-gray-400 mt-1">Opportunity Intelligence & Real-Time Tracking for <span class="font-semibold text-blue-400" id="cand-name">Jeremiah Kariuki Beth</span></p>
       </div>
@@ -337,6 +344,18 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(HTML_DASHBOARD.encode("utf-8"))
             return
+
+        if path == "/favicon.svg" or path == "/favicon.ico":
+            fav_path = Path("static/favicon.svg")
+            if fav_path.exists():
+                with open(fav_path, "rb") as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "image/svg+xml")
+                self.send_header("Cache-Control", "public, max-age=86400")
+                self.end_headers()
+                self.wfile.write(content)
+                return
 
         if path == "/api/jobs":
             jobs = tracker.get_all_jobs()
