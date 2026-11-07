@@ -19,6 +19,8 @@ from dateutil import parser as date_parser
 from src.models import JobPosting
 from src.eligibility import EligibilityEngine
 
+from src.live_aggregators import WWRScraper, HimalayasScraper, RemoteOKScraper, DirectATSScraper
+
 logger = logging.getLogger(__name__)
 
 class JobFetcher:
@@ -103,13 +105,21 @@ class JobFetcher:
 
     def fetch_from_api(self, target_roles: List[str]) -> List[JobPosting]:
         """
-        Fetches live jobs using python requests/urllib if available and connected.
-        Gracefully handles disconnected sandboxes by logging or loading cached/curated postings.
+        Fetches live jobs across multi-platform sources:
+        1. Remotive API & keyword searches
+        2. Arbeitnow API
+        3. Jobicy API
+        4. We Work Remotely (Full-stack & Backend RSS)
+        5. Himalayas.app Remote Tech API
+        6. RemoteOK Developer Feed
+        7. Direct ATS boards (Canonical, GiveDirectly, Bboxx, Ona, d.light, Cellulant)
+        8. Local verified seed feed
         """
         collected: List[JobPosting] = []
         current_ts = time.time()
+        seen_urls = set()
 
-        # Public endpoints that provide remote tech jobs
+        # 1. Remotive, Arbeitnow, Jobicy endpoints
         endpoints = [
             {
                 "name": "Remotive API",
@@ -123,7 +133,7 @@ class JobFetcher:
             },
             {
                 "name": "Jobicy API",
-                "url": "https://jobicy.com/api/v2/remote-jobs?count=30&tag=engineering",
+                "url": "https://jobicy.com/api/v2/remote-jobs?count=40&tag=engineering",
                 "parser": self._parse_jobicy
             }
         ]
@@ -133,41 +143,118 @@ class JobFetcher:
             try:
                 req = urllib.request.Request(
                     ep["url"],
-                    headers={"User-Agent": "Mozilla/5.0 (compatible; EMEAJobIntel/1.0)"}
+                    headers={"User-Agent": "Mozilla/5.0 (compatible; Jkjob-search/2.0)"}
                 )
                 with urllib.request.urlopen(req, timeout=10) as response:
                     if response.status == 200:
                         data = json.loads(response.read().decode("utf-8"))
                         jobs = ep["parser"](data, current_ts)
-                        collected.extend(jobs)
-            except Exception as e:
-                # Sandbox or network offline is caught cleanly
+                        for j in jobs:
+                            if j.application_url not in seen_urls:
+                                seen_urls.add(j.application_url)
+                                collected.append(j)
+            except Exception:
                 pass
 
-        # Also load from local fresh feed cache if available (cv/incoming_jobs.json or data/seed_jobs.json)
+        # 2. We Work Remotely RSS
+        try:
+            wwr_raw = WWRScraper.fetch()
+            for r in wwr_raw:
+                if r["url"] not in seen_urls:
+                    seen_urls.add(r["url"])
+                    job = self.process_raw_job(
+                        raw_id=r["id"], title=r["title"], company=r["company"],
+                        url=r["url"], source=r["source"], published_at_str=r["published_at"],
+                        location=r["location"], description=r["description"],
+                        employment_type=r["employment_type"], seniority=r["seniority"],
+                        salary=r["salary"], skills=r["skills"], current_ts=current_ts
+                    )
+                    if job:
+                        collected.append(job)
+        except Exception:
+            pass
+
+        # 3. Himalayas.app
+        try:
+            him_raw = HimalayasScraper.fetch()
+            for r in him_raw:
+                if r["url"] not in seen_urls:
+                    seen_urls.add(r["url"])
+                    job = self.process_raw_job(
+                        raw_id=r["id"], title=r["title"], company=r["company"],
+                        url=r["url"], source=r["source"], published_at_str=r["published_at"],
+                        location=r["location"], description=r["description"],
+                        employment_type=r["employment_type"], seniority=r["seniority"],
+                        salary=r["salary"], skills=r["skills"], current_ts=current_ts
+                    )
+                    if job:
+                        collected.append(job)
+        except Exception:
+            pass
+
+        # 4. RemoteOK Feed
+        try:
+            rok_raw = RemoteOKScraper.fetch()
+            for r in rok_raw:
+                if r["url"] not in seen_urls:
+                    seen_urls.add(r["url"])
+                    job = self.process_raw_job(
+                        raw_id=r["id"], title=r["title"], company=r["company"],
+                        url=r["url"], source=r["source"], published_at_str=r["published_at"],
+                        location=r["location"], description=r["description"],
+                        employment_type=r["employment_type"], seniority=r["seniority"],
+                        salary=r["salary"], skills=r["skills"], current_ts=current_ts
+                    )
+                    if job:
+                        collected.append(job)
+        except Exception:
+            pass
+
+        # 5. Direct ATS Boards (Canonical, GiveDirectly, Bboxx, Ona, d.light, Cellulant)
+        try:
+            ats_raw = DirectATSScraper.fetch()
+            for r in ats_raw:
+                if r["url"] not in seen_urls:
+                    seen_urls.add(r["url"])
+                    job = self.process_raw_job(
+                        raw_id=r["id"], title=r["title"], company=r["company"],
+                        url=r["url"], source=r["source"], published_at_str=r["published_at"],
+                        location=r["location"], description=r["description"],
+                        employment_type=r["employment_type"], seniority=r["seniority"],
+                        salary=r["salary"], skills=r["skills"], current_ts=current_ts
+                    )
+                    if job:
+                        collected.append(job)
+        except Exception:
+            pass
+
+        # 6. Local Verified Buffer Feed
         local_seed = Path("data/fresh_feed.json")
         if local_seed.exists():
             try:
                 with open(local_seed, "r", encoding="utf-8") as f:
                     seeds = json.load(f)
                     for item in seeds:
-                        job = self.process_raw_job(
-                            raw_id=item.get("id", item.get("url", "")),
-                            title=item.get("title", ""),
-                            company=item.get("company", ""),
-                            url=item.get("url", ""),
-                            source=item.get("source", "Direct ATS"),
-                            published_at_str=item.get("published_at", ""),
-                            location=item.get("location", ""),
-                            description=item.get("description", ""),
-                            employment_type=item.get("employment_type", "Full-time"),
-                            seniority=item.get("seniority", "Mid-level"),
-                            salary=item.get("salary", "Undisclosed"),
-                            skills=item.get("skills", []),
-                            current_ts=current_ts
-                        )
-                        if job:
-                            collected.append(job)
+                        u = item.get("url", "")
+                        if u not in seen_urls:
+                            seen_urls.add(u)
+                            job = self.process_raw_job(
+                                raw_id=item.get("id", u),
+                                title=item.get("title", ""),
+                                company=item.get("company", ""),
+                                url=u,
+                                source=item.get("source", "Direct ATS"),
+                                published_at_str=item.get("published_at", ""),
+                                location=item.get("location", ""),
+                                description=item.get("description", ""),
+                                employment_type=item.get("employment_type", "Full-time"),
+                                seniority=item.get("seniority", "Mid-level"),
+                                salary=item.get("salary", "Undisclosed"),
+                                skills=item.get("skills", []),
+                                current_ts=current_ts
+                            )
+                            if job:
+                                collected.append(job)
             except Exception:
                 pass
 

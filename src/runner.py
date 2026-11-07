@@ -41,9 +41,9 @@ class PipelineRunner:
             print(f"    Years of Experience: ~{profile.years_of_experience:.1f} yrs")
 
         # 2. Fetch Jobs
-        print("\n[+] Pulling vacancies across remote platforms (Remotive, Jobicy, Arbeitnow, Direct ATS)...")
+        print("\n[+] Pulling vacancies across multi-platform aggregators (WWR, Himalayas, RemoteOK, Remotive, Jobicy, Arbeitnow, Direct ATS)...")
         raw_jobs = self.fetcher.fetch_from_api(profile.primary_roles)
-        print(f"    Fetched {len(raw_jobs)} candidate listings.")
+        print(f"    Fetched {len(raw_jobs)} candidate listings across all aggregators.")
 
         current_ts = time.time()
         stats = {
