@@ -5,7 +5,7 @@
 **Contact:** jeremmykariz001@gmail.com | +254 743 341 474  
 **Verified Experience:** ~3.0 years  
 **Source CVs:** jeremiah_kariuki_cv.txt  
-**Last Updated:** 2026-11-15 20:23:48 EAT  
+**Last Updated:** 2026-11-15 21:36:56 EAT  
 
 ---
 

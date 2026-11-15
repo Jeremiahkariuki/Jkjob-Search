@@ -19,7 +19,7 @@ from dateutil import parser as date_parser
 from src.models import JobPosting
 from src.eligibility import EligibilityEngine
 
-from src.live_aggregators import WWRScraper, HimalayasScraper, RemoteOKScraper, DirectATSScraper, SSL_CONTEXT
+from src.live_aggregators import WWRScraper, HimalayasScraper, RemoteOKScraper, DirectATSScraper, LinkedInScraper, SSL_CONTEXT
 
 logger = logging.getLogger(__name__)
 
@@ -236,10 +236,28 @@ class JobFetcher:
                     )
                     if job:
                         collected.append(job)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"DirectATS error: {e}")
 
-        # 6. Local Verified Buffer Feed
+        # 6. LinkedIn (Kenya + EMEA / Africa Remote via Guest API)
+        try:
+            li_raw = LinkedInScraper.fetch()
+            for r in li_raw:
+                if r["url"] not in seen_urls:
+                    seen_urls.add(r["url"])
+                    job = self.process_raw_job(
+                        raw_id=r["id"], title=r["title"], company=r["company"],
+                        url=r["url"], source=r["source"], published_at_str=r["published_at"],
+                        location=r["location"], description=r["description"],
+                        employment_type=r["employment_type"], seniority=r["seniority"],
+                        salary=r["salary"], skills=r["skills"], current_ts=current_ts
+                    )
+                    if job:
+                        collected.append(job)
+        except Exception as e:
+            logger.debug(f"LinkedIn error: {e}")
+
+        # 7. Local Verified Buffer Feed
         local_seed = Path("data/fresh_feed.json")
         if local_seed.exists():
             try:

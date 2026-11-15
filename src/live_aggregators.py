@@ -4,14 +4,19 @@ Pulls fresh vacancies from:
 1. We Work Remotely (Software Engineering RSS)
 2. Himalayas.app Remote Tech API
 3. RemoteOK Live Developer JSON Feed
-4. Direct ATS Boards (Canonical, GiveDirectly, Bboxx, Ona, d.light)
+4. Direct ATS Boards (Canonical, GiveDirectly, d.light, Alpaca)
+5. LinkedIn (Kenya + EMEA remote, public guest API)
 """
 import json
 import logging
+import re
 import ssl
+import time
 import urllib.request
+import urllib.parse
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from html.parser import HTMLParser
 from typing import List, Dict, Any, Optional
 
 try:
@@ -187,11 +192,10 @@ class DirectATSScraper:
         {"slug": "alpaca", "name": "Alpaca"}
     ]
 
-    # Target companies using Lever
+    # Target companies using Lever (only valid slugs)
     LEVER_BOARDS = [
-        {"slug": "bboxx", "name": "Bboxx"},
-        {"slug": "ona", "name": "Ona"},
-        {"slug": "cellulant", "name": "Cellulant"}
+        {"slug": "andela", "name": "Andela"},
+        {"slug": "turing", "name": "Turing"},
     ]
 
     @classmethod
@@ -264,3 +268,184 @@ class DirectATSScraper:
                 logger.debug(f"Failed Lever {lev['slug']}: {e}")
 
         return jobs
+
+
+# ---------------------------------------------------------------------------
+# LinkedIn Public Guest Scraper
+# ---------------------------------------------------------------------------
+
+def _parse_li_relative_date(dt_attr: str, time_text: str = "") -> str:
+    """Convert LinkedIn relative text ('2 hours ago', '1 day ago') or ISO date to UTC string."""
+    now = datetime.now(timezone.utc)
+    text = (time_text or "").lower().strip()
+    if any(unit in text for unit in ["hour", "minute", "just now", "sec"]):
+        m = re.search(r'(\d+)\s*hour', text)
+        hrs = int(m.group(1)) if m else 1
+        return (now - timedelta(hours=hrs)).isoformat()
+    if "day" in text:
+        m = re.search(r'(\d+)\s*day', text)
+        days = int(m.group(1)) if m else 1
+        return (now - timedelta(days=days)).isoformat()
+    if "week" in text:
+        m = re.search(r'(\d+)\s*week', text)
+        wks = int(m.group(1)) if m else 1
+        return (now - timedelta(weeks=wks)).isoformat()
+    if dt_attr:
+        for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%fZ"):
+            try:
+                return datetime.strptime(dt_attr, fmt).replace(tzinfo=timezone.utc).isoformat()
+            except ValueError:
+                pass
+    return now.isoformat()
+
+
+class _LICardParser:
+    """Regex-based parser to extract LinkedIn guest job card fields."""
+
+    @classmethod
+    def parse(cls, html: str) -> List[Dict[str, Any]]:
+        jobs = []
+        li_blocks = re.findall(r'<li\b[^>]*>(.*?)</li>', html, re.DOTALL)
+        for b in li_blocks:
+            t_m = re.search(r'class="base-search-card__title"[^>]*>(.*?)</h3>', b, re.DOTALL)
+            c_m = re.search(r'class="base-search-card__subtitle"[^>]*>(.*?)</h4>', b, re.DOTALL)
+            l_m = re.search(r'class="job-search-card__location"[^>]*>(.*?)</span>', b, re.DOTALL)
+            u_m = re.search(r'class="base-card__full-link[^"]*"\s+href="([^"?]+)', b)
+            d_m = re.search(r'<time[^>]*datetime="([^"]+)"[^>]*>(.*?)</time>', b, re.DOTALL)
+            
+            if not d_m:
+                d_m_tag = re.search(r'<time[^>]*>(.*?)</time>', b, re.DOTALL)
+                time_text = d_m_tag.group(1).strip() if d_m_tag else ""
+                dt_attr = ""
+            else:
+                dt_attr = d_m.group(1)
+                time_text = d_m.group(2).strip()
+
+            title = re.sub(r'<[^<]+?>', '', t_m.group(1)).strip() if t_m else ""
+            company = re.sub(r'<[^<]+?>', '', c_m.group(1)).strip() if c_m else ""
+            loc = re.sub(r'<[^<]+?>', '', l_m.group(1)).strip() if l_m else ""
+            url = u_m.group(1) if u_m else ""
+
+            if title and url:
+                jobs.append({
+                    "title": title,
+                    "company": company,
+                    "location": loc,
+                    "url": url,
+                    "datetime": dt_attr,
+                    "time_text": time_text,
+                })
+        return jobs
+
+
+class LinkedInScraper:
+    """
+    Scrapes LinkedIn public guest job-search endpoint (no auth required).
+    CV-tailored keyword queries for Jeremiah Kariuki Beth.
+    Rate-limited: 1.5s sleep between requests.
+    """
+
+    _BASE = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
+
+    QUERIES = [
+        ("Python Django",   "Kenya",     {}),
+        ("Odoo Developer",   "Kenya",     {}),
+        ("Full Stack",       "Kenya",     {}),
+        ("Python Developer", "Kenya",     {}),
+        ("Python Engineer",  "Nairobi",   {}),
+        ("Django Developer", "Worldwide", {"f_WT": "2"}),
+        ("Python Developer", "EMEA",      {"f_WT": "2"}),
+    ]
+
+    _TECH_KW = [
+        "python", "django", "backend", "back-end", "full stack", "fullstack",
+        "odoo", "fastapi", "developer", "engineer", "software", "react",
+        "typescript", "node", "api", "erp", "devops", "qa"
+    ]
+
+    @classmethod
+    def _build_url(cls, keywords: str, location: str, extra: dict, start: int = 0) -> str:
+        params = {"keywords": keywords, "location": location, "start": str(start)}
+        params.update(extra)
+        return cls._BASE + "?" + urllib.parse.urlencode(params)
+
+    @classmethod
+    def _make_li_request(cls, url: str) -> Optional[bytes]:
+        try:
+            req = urllib.request.Request(url, headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/122.0.0.0 Safari/537.36"
+                ),
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Referer": "https://www.linkedin.com/jobs/search/",
+            })
+            with urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=15) as resp:
+                if resp.status == 200:
+                    return resp.read()
+        except Exception as e:
+            logger.debug(f"LinkedIn request failed for {url}: {e}")
+        return None
+
+    @classmethod
+    def fetch(cls) -> List[Dict[str, Any]]:
+        all_jobs: List[Dict[str, Any]] = []
+        seen_urls: set = set()
+
+        for keywords, location, extra in cls.QUERIES:
+            logger.info(f"LinkedIn: querying '{keywords}' in '{location}'")
+            url = cls._build_url(keywords, location, extra)
+            raw = cls._make_li_request(url)
+
+            if not raw:
+                time.sleep(1.0)
+                continue
+
+            try:
+                html = raw.decode("utf-8", errors="replace")
+                cards = _LICardParser.parse(html)
+
+                for card in cards:
+                    title = card.get("title", "")
+                    job_url = card.get("url", "")
+                    company = card.get("company", "Unknown")
+                    loc = card.get("location", location)
+                    dt_attr = card.get("datetime", "")
+                    time_text = card.get("time_text", "")
+
+                    if not title or not job_url or job_url in seen_urls:
+                        continue
+                    if not any(kw in title.lower() for kw in cls._TECH_KW):
+                        continue
+
+                    seen_urls.add(job_url)
+                    loc_lower = loc.lower()
+                    emp_type = "Remote" if "remote" in loc_lower else ("Hybrid" if "hybrid" in loc_lower else "Full-time")
+                    seniority = "Senior" if any(s in title.lower() for s in ["senior", "lead", "principal", "head"]) else "Mid-level"
+                    slug = re.sub(r"[^a-z0-9]", "_", job_url.rstrip("/").split("/")[-1].lower())[:40]
+
+                    all_jobs.append({
+                        "id": f"li_{slug}",
+                        "title": title,
+                        "company": company,
+                        "url": job_url,
+                        "source": "LinkedIn",
+                        "published_at": _parse_li_relative_date(dt_attr, time_text),
+                        "location": loc,
+                        "description": f"{title} at {company}. Location: {loc}. Apply on LinkedIn.",
+                        "employment_type": emp_type,
+                        "seniority": seniority,
+                        "salary": "Not disclosed",
+                        "skills": [],
+                    })
+
+                logger.info(f"LinkedIn: {len(cards)} cards parsed for '{keywords}'")
+            except Exception as e:
+                logger.warning(f"LinkedIn parse error for '{keywords}': {e}")
+
+            time.sleep(1.0)
+
+        logger.info(f"LinkedIn total: {len(all_jobs)} unique jobs")
+        return all_jobs
