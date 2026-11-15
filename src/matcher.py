@@ -106,8 +106,9 @@ class JobMatcher:
             emea_score = 0
 
         # 5. Employment type and career-goal alignment (max 10)
+        emp_type_str = str(job.employment_type or "").lower()
         employment_score = 8
-        if "full-time" in job.employment_type.lower() or "contract" in job.employment_type.lower():
+        if "full-time" in emp_type_str or "contract" in emp_type_str:
             employment_score = 10
             essential_met.append(f"Verified employment model: {job.employment_type}")
 

@@ -19,7 +19,7 @@ from dateutil import parser as date_parser
 from src.models import JobPosting
 from src.eligibility import EligibilityEngine
 
-from src.live_aggregators import WWRScraper, HimalayasScraper, RemoteOKScraper, DirectATSScraper
+from src.live_aggregators import WWRScraper, HimalayasScraper, RemoteOKScraper, DirectATSScraper, SSL_CONTEXT
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +83,17 @@ class JobFetcher:
         else:
             arrangement = "Remote / Flexible"
 
+        # Normalize fields to string
+        if isinstance(employment_type, list):
+            employment_type = ", ".join(str(x) for x in employment_type)
+        else:
+            employment_type = str(employment_type or "Full-time")
+
+        if isinstance(seniority, list):
+            seniority = ", ".join(str(x) for x in seniority)
+        else:
+            seniority = str(seniority or "Mid-level")
+
         return JobPosting(
             job_id=raw_id,
             title=title,
@@ -145,7 +156,7 @@ class JobFetcher:
                     ep["url"],
                     headers={"User-Agent": "Mozilla/5.0 (compatible; Jkjob-search/2.0)"}
                 )
-                with urllib.request.urlopen(req, timeout=10) as response:
+                with urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=10) as response:
                     if response.status == 200:
                         data = json.loads(response.read().decode("utf-8"))
                         jobs = ep["parser"](data, current_ts)

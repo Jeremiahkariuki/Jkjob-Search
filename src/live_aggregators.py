@@ -8,17 +8,24 @@ Pulls fresh vacancies from:
 """
 import json
 import logging
+import ssl
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
+
+try:
+    import certifi
+    SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+except Exception:
+    SSL_CONTEXT = ssl._create_unverified_context()
 
 logger = logging.getLogger(__name__)
 
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 (Jkjob-search/2.0)"
 
 def make_request(url: str, timeout: int = 10) -> Optional[bytes]:
-    """Makes a reliable HTTP GET request with standard browser headers."""
+    """Makes a reliable HTTP GET request with standard browser headers and verified SSL."""
     try:
         req = urllib.request.Request(
             url,
@@ -28,7 +35,7 @@ def make_request(url: str, timeout: int = 10) -> Optional[bytes]:
                 "Accept-Language": "en-US,en;q=0.9"
             }
         )
-        with urllib.request.urlopen(req, timeout=timeout) as response:
+        with urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=timeout) as response:
             if response.status == 200:
                 return response.read()
     except Exception as e:
