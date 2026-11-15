@@ -123,6 +123,22 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       font-weight: 600;
     }
 
+    /* Filter dropdowns */
+    select.filter-select {
+      background-color: var(--select-bg);
+      color: var(--select-text);
+      border: 1px solid var(--filter-btn-border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    body.light-theme select.filter-select {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border: 1px solid #cbd5e1 !important;
+    }
+
     /* Filter buttons */
     .filter-btn-inactive {
       background: var(--filter-btn-bg);
@@ -198,11 +214,16 @@ HTML_DASHBOARD = """<!DOCTYPE html>
     <!-- Filter Control Bar -->
     <div class="glass-card p-4 space-y-3">
       <!-- Status Filters -->
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs font-bold uppercase txt-meta mr-2">Status / Fit:</span>
-        <button onclick="setFilter('all')" id="tab-all" class="px-3.5 py-1.5 rounded-md text-xs font-bold bg-blue-600 text-white shadow-sm">All Openings</button>
-        <button onclick="setFilter('top')" id="tab-top" class="px-3.5 py-1.5 rounded-md text-xs font-bold filter-btn-inactive">🔥 Top Matches (≥85)</button>
-        <button onclick="setFilter('applied')" id="tab-applied" class="px-3.5 py-1.5 rounded-md text-xs font-bold filter-btn-inactive">📝 Applied / Shortlisted</button>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-bold uppercase txt-meta mr-2">Status / Fit:</span>
+          <button onclick="setFilter('all')" id="tab-all" class="px-3.5 py-1.5 rounded-md text-xs font-bold bg-blue-600 text-white shadow-sm">All Openings</button>
+          <button onclick="setFilter('top')" id="tab-top" class="px-3.5 py-1.5 rounded-md text-xs font-bold filter-btn-inactive">🔥 Top Matches (≥85)</button>
+          <button onclick="setFilter('applied')" id="tab-applied" class="px-3.5 py-1.5 rounded-md text-xs font-bold filter-btn-inactive">📝 Applied / Shortlisted</button>
+        </div>
+        <button onclick="resetAllFilters()" id="reset-filters-btn" class="px-3 py-1 rounded text-xs font-bold text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/60 transition hidden whitespace-nowrap">
+          ✕ Reset Filters
+        </button>
       </div>
 
       <!-- Arrangement Filters (Remote, Hybrid, Onsite) -->
@@ -212,6 +233,25 @@ HTML_DASHBOARD = """<!DOCTYPE html>
         <button onclick="setArrangement('Remote')" id="arr-remote" class="px-3 py-1 rounded text-xs font-bold filter-btn-inactive">🌐 Remote Only</button>
         <button onclick="setArrangement('Hybrid')" id="arr-hybrid" class="px-3 py-1 rounded text-xs font-bold filter-btn-inactive">🏢 Hybrid (Nairobi)</button>
         <button onclick="setArrangement('Onsite')" id="arr-onsite" class="px-3 py-1 rounded text-xs font-bold filter-btn-inactive">📍 Onsite / Office</button>
+      </div>
+
+      <!-- Dropdown Filter Row: API Source & Company -->
+      <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-700/40">
+        <!-- API Platform / Source Dropdown -->
+        <div class="flex items-center gap-2 flex-1 min-w-[260px]">
+          <span class="text-xs font-bold uppercase txt-meta whitespace-nowrap">API / Source:</span>
+          <select id="source-dropdown" onchange="setSourceFilter(this.value)" class="filter-select w-full focus:outline-none focus:border-blue-500 cursor-pointer">
+            <option value="all">All APIs & Sources (Loading...)</option>
+          </select>
+        </div>
+
+        <!-- Hiring Company Dropdown -->
+        <div class="flex items-center gap-2 flex-1 min-w-[260px]">
+          <span class="text-xs font-bold uppercase txt-meta whitespace-nowrap">Company:</span>
+          <select id="company-dropdown" onchange="setCompanyFilter(this.value)" class="filter-select w-full focus:outline-none focus:border-blue-500 cursor-pointer">
+            <option value="all">All Companies (Loading...)</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -225,6 +265,8 @@ HTML_DASHBOARD = """<!DOCTYPE html>
   <script>
     let currentFilter = 'all';
     let currentArrangement = 'all';
+    let currentSource = 'all';
+    let currentCompany = 'all';
     let allJobs = [];
 
     // Theme Management
@@ -256,10 +298,63 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       try {
         const res = await fetch('/api/jobs');
         allJobs = await res.json();
+        populateDropdowns();
         renderJobs();
       } catch (err) {
         document.getElementById('jobs-container').innerHTML = '<div class="text-red-500 font-bold p-4 text-center">Failed to load vacancies from database.</div>';
       }
+    }
+
+    function populateDropdowns() {
+      const sourceSelect = document.getElementById('source-dropdown');
+      const companySelect = document.getElementById('company-dropdown');
+      if (!sourceSelect || !companySelect) return;
+
+      const sourceCounts = {};
+      const companyCounts = {};
+
+      allJobs.forEach(j => {
+        const s = j.original_source || 'Other';
+        sourceCounts[s] = (sourceCounts[s] || 0) + 1;
+
+        const c = j.company || 'Other';
+        companyCounts[c] = (companyCounts[c] || 0) + 1;
+      });
+
+      // Populate APIs / Sources
+      const sortedSources = Object.keys(sourceCounts).sort();
+      sourceSelect.innerHTML = `<option value="all">🌐 All Sources & APIs (${allJobs.length})</option>` +
+        sortedSources.map(s => `<option value="${s}" ${currentSource === s ? 'selected' : ''}>${s} (${sourceCounts[s]})</option>`).join('');
+
+      // Populate Companies
+      const sortedCompanies = Object.keys(companyCounts).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+      companySelect.innerHTML = `<option value="all">🏢 All Companies (${sortedCompanies.length})</option>` +
+        sortedCompanies.map(c => `<option value="${c}" ${currentCompany === c ? 'selected' : ''}>${c} (${companyCounts[c]})</option>`).join('');
+    }
+
+    function setSourceFilter(s) {
+      currentSource = s;
+      renderJobs();
+    }
+
+    function setCompanyFilter(c) {
+      currentCompany = c;
+      renderJobs();
+    }
+
+    function resetAllFilters() {
+      currentFilter = 'all';
+      currentArrangement = 'all';
+      currentSource = 'all';
+      currentCompany = 'all';
+
+      const sourceSelect = document.getElementById('source-dropdown');
+      const companySelect = document.getElementById('company-dropdown');
+      if (sourceSelect) sourceSelect.value = 'all';
+      if (companySelect) companySelect.value = 'all';
+
+      setFilter('all');
+      setArrangement('all');
     }
 
     function setFilter(f) {
@@ -301,8 +396,30 @@ HTML_DASHBOARD = """<!DOCTYPE html>
           const arr = (j.work_arrangement || '').toLowerCase();
           if (!arr.includes(currentArrangement.toLowerCase())) return false;
         }
+
+        // Source / API Platform filter
+        if (currentSource !== 'all') {
+          if ((j.original_source || '') !== currentSource) return false;
+        }
+
+        // Company filter
+        if (currentCompany !== 'all') {
+          if ((j.company || '').toLowerCase() !== currentCompany.toLowerCase()) return false;
+        }
+
         return true;
       });
+
+      // Update reset button visibility
+      const hasActiveFilter = (currentFilter !== 'all' || currentArrangement !== 'all' || currentSource !== 'all' || currentCompany !== 'all');
+      const resetBtn = document.getElementById('reset-filters-btn');
+      if (resetBtn) {
+        if (hasActiveFilter) {
+          resetBtn.classList.remove('hidden');
+        } else {
+          resetBtn.classList.add('hidden');
+        }
+      }
 
       document.getElementById('total-count').innerText = allJobs.length + ' Positions';
       const appliedCount = allJobs.filter(j => ['Applied', 'Interviewing'].includes(j.application_status)).length;
