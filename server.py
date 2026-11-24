@@ -658,10 +658,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.send_response(404)
         self.end_headers()
 
-def run_server(port=8000):
+def run_server(port=8007):
     server = ThreadingHTTPServer(("0.0.0.0", port), DashboardHandler)
     print(f"[✓] Jkjob-search web dashboard running at http://localhost:{port}")
     server.serve_forever()
 
 if __name__ == "__main__":
-    run_server(8000)
+    import sys
+    port = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1].isdigit() else 8007
+    run_server(port)
